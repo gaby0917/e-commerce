@@ -11,5 +11,5 @@ import {ListaProdutos} from './features/produtos/lista-produtos/lista-produtos';
 })
 export class App {
   protected readonly title = signal('e-commerce');
-  nomeLoja = 'Liwi';
+  nomeLoja = 'Pewiccon';
 }
