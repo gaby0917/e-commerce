@@ -5,7 +5,8 @@ import { computed } from '@angular/core';
 import { PrecoFormatadoPipe } from '../../../shared/pipes/preco-formatado-pipe';
 import { effect } from '@angular/core';
 import { UpperCasePipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { produtoService } from '../produtos.service';
+import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-lista-produtos',
@@ -25,32 +26,26 @@ export class ListaProdutos {
      // ! false: esconder indicador e exibir a lista de produtos
      carregando = signal(true);
 
+     //? ==========MÉTODO HTTP (API) Foi Modificado para (ProdutosService)===========
      //! cria o método para requisição dos produtos
+     
      carregarProdutos() {
-
-      //! Iniciar Loading
       this.carregando.set(true);
-      this.http.get< { title: string; price: number }[]>
-        ('https://fakestoreapi.com/products')
-          .subscribe({
-            next: (dados) => {
 
-              //! Adapta a API para nosso Projeto
-              const produtosFormatados = dados.map(p =>({
-                nome: p.title,
-                preco: p.price
-              }));
-              this.produtos.set(produtosFormatados);
-              this.carregando.set(false); 
+      this.produtosService.buscarProdutos().subscribe({
+            next: (dados) => {
+              const produtos = this.produtosService.transformarProdutos(dados);
+              this.produtos.set(produtos);
+              this.carregando.set(false);
             },
-            //? Finaliza Loading
             error: (erro) => {
-              console.error('Erro ao carregar produtos: ', erro);
-              this.carregando.set(false); //! Evita loading infinitos
-            }
-          });
+              console.error('Erro ao carregar os Produtos:, ' ,erro);
+              this.carregando.set(false);
+            },
+      });
      }
 
+     //? =========MÉTODO EXISTENTE Ñ ALTERAR========
   exibirProduto (nome: string){
     //console.log ('Produto Selecionado: ', nome);
     this.produtoSelecionado.set(nome);
@@ -76,7 +71,7 @@ export class ListaProdutos {
       ]);
     }
     //! injetar httpClient dentro de constructor, restruturar construtor!!!
-  constructor(private http: HttpClient) {
+  constructor() {
 
     //! Carregar a API
     this.carregarProdutos();
@@ -99,6 +94,9 @@ carrinho = signal <{ nome: string; preco: number }[]>([]);
 adicionarAoCarrinho(produto: { nome: string; preco: number }){
   this.carrinho.update(listaAtual =>[
     ...listaAtual,produto]);}
+
+    //? ============INJECT=============
+    private produtosService = inject(produtoService);
 
 quantidadeCarrinho = computed(() => this.carrinho().length);
 
